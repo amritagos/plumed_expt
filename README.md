@@ -1,0 +1,3 @@
+# Experiments with PLUMED 
+
+A repository where I noodle around with PLUMED and the ASE plugin for PLUMED...

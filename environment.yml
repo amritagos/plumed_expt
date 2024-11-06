@@ -1,0 +1,14 @@
+name: plumedenv
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - ase>=3.22.1
+  - numpy>=1.26.4
+  - scipy>=1.7.3
+  - ipython>=8.26.0
+  - pandas>=2.2.2
+  - ipykernel
+  - py-plumed>=2.4
+  - plumed
+  - gsl==2.5
