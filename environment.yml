@@ -11,4 +11,3 @@ dependencies:
   - ipykernel
   - py-plumed>=2.4
   - plumed
-  - gsl==2.5
