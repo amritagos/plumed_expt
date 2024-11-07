@@ -11,3 +11,4 @@ dependencies:
   - ipykernel
   - py-plumed>=2.4
   - plumed
+  - gpaw
