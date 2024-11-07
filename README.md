@@ -29,3 +29,7 @@ Note: when installing `conda-lock` make sure to use `pipx`.
 module load GCC/13.2.0
 ```
 Make sure to load the GCC module before activating the environment. 
+
+## Tutorials 
+
+**`ase_plumed_tutorial`**- From the [ASE-PLUMED_tutorial](https://github.com/Sucerquia/ASE-PLUMED_tutorial) 
