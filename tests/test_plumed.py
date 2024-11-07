@@ -56,6 +56,11 @@ def test_colvar_output():
     assert np.all(np.array(colvar["c1.moment-2"][:1]) == np.array([0.757954]))
     # Delete the COLVAR file
     out_colvarfile.unlink()
+    # ------------
+    # Not needed, but this is how you can interact with the plumed.Plumed object
+    plumed_version = np.zeros(1, dtype=np.intc)
+    atoms.calc.plumed.cmd("getApiVersion", plumed_version)
+    print(f"{plumed_version=}")
 
 
 if __name__ == "__main__":
