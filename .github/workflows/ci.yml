@@ -1,0 +1,34 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+
+  test:
+    runs-on: ${{ matrix.os }}
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest] # macos-latest doesn't work
+        build-type: [Release]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup micromamba
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        micromamba-version: '1.5.7-0'
+        environment-file: conda-lock.yml
+        environment-name: plumedenv
+        init-shell: >-
+          bash
+          powershell
+        cache-environment: true
+        post-cleanup: 'all'
+
+    - name: Run the tests 
+      shell:  micromamba-shell {0}
+      run: |
+        pytest -v 
