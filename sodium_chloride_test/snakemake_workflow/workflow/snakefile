@@ -1,0 +1,42 @@
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import json
+
+NUMBER_OF_WINDOWS = 25
+DISTANCE_LOWEST = 2.0
+DISTANCE_HIGHEST = 6.0
+BOX_DIMENSION = 12.35 # For a box of given size 
+N_WATER_MOLECULES = 64
+
+distances = np.linspace(DISTANCE_LOWEST, DISTANCE_HIGHEST, NUMBER_OF_WINDOWS)
+input_dict = {str(i): value for i, value in enumerate(distances)}
+
+SAMPLES = list(input_dict.keys())
+
+rule all:
+    input: 
+        expand("results/packmol/{sample}/system.xyz", sample=SAMPLES),
+
+rule packmol_input:
+    input:
+        cation = "resources/na.xyz",
+        anion = "resources/cl.xyz",
+        water = "resources/tip4p_2005_water.xyz",
+    params:
+        system = "results/packmol/{sample}/system.xyz",
+        distance = lambda wc: input_dict[wc.sample],
+        n_waters = N_WATER_MOLECULES,
+        box_length = BOX_DIMENSION,
+    output:
+        packmol = "results/packmol/{sample}/packmol.inp"
+    shell:
+        "python workflow/scripts/gen_packmol_input.py --cation_file {input.cation} --anion_file {input.anion} --water_file {input.water} --system_file {params.system} --ion_distance {params.distance} --n_wat {params.n_waters} --output_path {output.packmol} --box_dims {params.box_length} {params.box_length} {params.box_length}"
+
+rule run_packmol:
+    input:
+        packmol = rules.packmol_input.output.packmol
+    output:
+        packmol = "results/packmol/{sample}/system.xyz"
+    shell:
+        "packmol < {input.packmol}"
