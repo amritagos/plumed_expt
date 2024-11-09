@@ -28,6 +28,11 @@ jobs:
         cache-environment: true
         post-cleanup: 'all'
 
+    - name: Test that moltemplate works 
+      shell:  micromamba-shell {0}
+      run: |
+        moltemplate.sh --help 
+
     - name: Run the tests 
       shell:  micromamba-shell {0}
       run: |
