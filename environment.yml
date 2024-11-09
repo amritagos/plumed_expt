@@ -1,6 +1,7 @@
 name: plumedenv
 channels:
   - conda-forge
+  - bioconda
 dependencies:
   - python>=3.10
   - ase>=3.22.1
@@ -13,3 +14,7 @@ dependencies:
   - plumed
   - gpaw
   - pytest
+  - pipx
+  - snakemake
+  - moltemplate
+  - packmol
