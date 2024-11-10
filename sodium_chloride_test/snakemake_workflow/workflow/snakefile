@@ -7,7 +7,9 @@ NUMBER_OF_WINDOWS = 25
 DISTANCE_LOWEST = 2.0
 DISTANCE_HIGHEST = 6.0
 BOX_DIMENSION = 12.35 # For a box of given size 
-N_WATER_MOLECULES = 64
+NUM_WATER_MOLECULES = 64
+NUM_CATIONS = 1
+NUM_ANIONS = 1
 
 distances = np.linspace(DISTANCE_LOWEST, DISTANCE_HIGHEST, NUMBER_OF_WINDOWS)
 input_dict = {str(i): value for i, value in enumerate(distances)}
@@ -16,7 +18,7 @@ SAMPLES = list(input_dict.keys())
 
 rule all:
     input: 
-        expand("results/packmol/{sample}/system.xyz", sample=SAMPLES),
+        expand("results/moltemplate/{sample}/system.data", sample=SAMPLES),
 
 rule packmol_input:
     input:
@@ -26,7 +28,7 @@ rule packmol_input:
     params:
         system = "results/packmol/{sample}/system.xyz",
         distance = lambda wc: input_dict[wc.sample],
-        n_waters = N_WATER_MOLECULES,
+        n_waters = NUM_WATER_MOLECULES,
         box_length = BOX_DIMENSION,
     output:
         packmol = "results/packmol/{sample}/packmol.inp"
@@ -40,3 +42,31 @@ rule run_packmol:
         packmol = "results/packmol/{sample}/system.xyz"
     shell:
         "packmol < {input.packmol}"
+
+rule moltemplate_input:
+    input:
+        cation = "resources/moltemplate/fe.lt",
+        anion = "resources/moltemplate/cl.lt",
+        water = "resources/moltemplate/tip4p_2005.lt",
+    params:
+        n_cations = NUM_CATIONS,
+        n_anions = NUM_ANIONS,
+        n_waters = NUM_WATER_MOLECULES,
+        box_length = BOX_DIMENSION,
+    output:
+        moltemplate = "results/moltemplate/{sample}/system.lt"
+    shell:
+        "python workflow/scripts/gen_moltemplate_input.py --cation_file {input.cation} --anion_file {input.anion} --water_file {input.water} --n_cations {params.n_cations} --n_anions {params.n_anions} --n_wat {params.n_waters} --box_dims {params.box_length} {params.box_length} {params.box_length} --output_path {output.moltemplate}"
+
+rule run_moltemplate: 
+    input: 
+        system = rules.moltemplate_input.output.moltemplate,
+        xyz = rules.run_packmol.output.packmol
+    params:
+        moltemplate_dir = "results/moltemplate/{sample}",
+        full_system_lt_path = str(Path(rules.moltemplate_input.output.moltemplate).resolve()),
+        full_xyz_path = str(Path(rules.run_packmol.output.packmol).resolve())
+    output: 
+        data = Path("results/moltemplate/{sample}/system.data")
+    shell:
+        "cd {params.moltemplate_dir} && moltemplate.sh -atomstyle \"full\" {params.full_system_lt_path} -xyz {params.full_xyz_path} && rm -rf output_ttree system.in.init system.in.settings run* && cd ../../../"
