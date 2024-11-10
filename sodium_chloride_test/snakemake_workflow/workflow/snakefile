@@ -20,9 +20,9 @@ rule all:
 
 rule packmol_input:
     input:
-        cation = "resources/na.xyz",
-        anion = "resources/cl.xyz",
-        water = "resources/tip4p_2005_water.xyz",
+        cation = "resources/packmol/na.xyz",
+        anion = "resources/packmol/cl.xyz",
+        water = "resources/packmol/tip4p_2005_water.xyz",
     params:
         system = "results/packmol/{sample}/system.xyz",
         distance = lambda wc: input_dict[wc.sample],
