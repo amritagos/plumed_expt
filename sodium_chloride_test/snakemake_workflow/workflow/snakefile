@@ -10,6 +10,14 @@ BOX_DIMENSION = 12.35 # For a box of given size
 NUM_WATER_MOLECULES = 64
 NUM_CATIONS = 1
 NUM_ANIONS = 1
+LAMMPS_TYPE_NUMBER_CATION = 3
+LAMMPS_TYPE_NUMBER_ANION = 4
+LAMMPS_TYPE_NUMBER_O = 1
+LAMMPS_TYPE_NUMBER_H = 2
+ASE_TYPE_CATION = 11 # Na 
+ASE_TYPE_ANION = 17 # Cl
+ASE_TYPE_O = 8 # O 
+ASE_TYPE_H = 1 # H 
 
 distances = np.linspace(DISTANCE_LOWEST, DISTANCE_HIGHEST, NUMBER_OF_WINDOWS)
 input_dict = {str(i): value for i, value in enumerate(distances)}
@@ -18,7 +26,7 @@ SAMPLES = list(input_dict.keys())
 
 rule all:
     input: 
-        expand("results/moltemplate/{sample}/system.data", sample=SAMPLES),
+        expand("results/window_inputs/{sample}/system.xyz", sample=SAMPLES),
 
 rule packmol_input:
     input:
@@ -70,3 +78,20 @@ rule run_moltemplate:
         data = Path("results/moltemplate/{sample}/system.data")
     shell:
         "cd {params.moltemplate_dir} && moltemplate.sh -atomstyle \"full\" {params.full_system_lt_path} -xyz {params.full_xyz_path} && rm -rf output_ttree system.in.init system.in.settings run* && cd ../../../"
+
+rule lammps_data_to_xyz:
+    input: 
+        data = rules.run_moltemplate.output.data
+    params: 
+        cation_type_initial = LAMMPS_TYPE_NUMBER_CATION,
+        cation_type_final = ASE_TYPE_CATION,
+        anion_type_initial = LAMMPS_TYPE_NUMBER_ANION,
+        anion_type_final = ASE_TYPE_ANION,
+        o_type_initial = LAMMPS_TYPE_NUMBER_O,
+        o_type_final = ASE_TYPE_O,
+        h_type_initial = LAMMPS_TYPE_NUMBER_H,
+        h_type_final =  ASE_TYPE_H,
+    output: 
+        xyz = "results/window_inputs/{sample}/system.xyz"
+    shell:
+        "python workflow/scripts/convert_data_to_xyz.py --data_file {input.data} --cation_type_data {params.cation_type_initial} --cation_type_ase {params.cation_type_final} --anion_type_data {params.anion_type_initial} --anion_type_ase {params.anion_type_final} --o_type_data {params.o_type_initial} --o_type_ase {params.o_type_final} --h_type_data {params.h_type_initial} --h_type_ase {params.h_type_final} --output_xyz {output.xyz}"
