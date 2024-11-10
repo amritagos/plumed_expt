@@ -22,7 +22,7 @@ def main(
 
     # Read in the LAMMPS data file
     with open(data_file, "r") as f:
-        atoms = read_lammps_data(f, atom_style="full")
+        atoms = read_lammps_data(f, Z_of_type=None, atom_style="full")
 
     # Reassign atom types
     for atom in atoms:

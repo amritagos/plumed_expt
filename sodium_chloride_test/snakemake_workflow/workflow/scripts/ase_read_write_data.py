@@ -228,11 +228,13 @@ def read_lammps_data(
             numbers[ind] = atom_type
         else:
             numbers[ind] = Z_of_type[atom_type]
-        if masses is not None:
-            masses[ind] = mass_in[atom_type]
+        # if masses is not None:
+        #     masses[ind] = mass_in[atom_type]
     # convert units
     positions = convert(positions, "distance", units, "ASE")
     cell = convert(cell, "distance", units, "ASE")
+    # Set masses to None so that I don't have to mess with this TODO: change this back and masses should not be None
+    masses = None
     if masses is not None:
         masses = convert(masses, "mass", units, "ASE")
     if velocities is not None:
