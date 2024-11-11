@@ -50,7 +50,7 @@ def test_ase_extras_calculator():
     # Water
     mask_water = [atom.symbol in ["O", "H"] for atom in system]
     water_subset = system[mask_water]
-    calc_water = TIP4P_2005(rc=6)
+    calc_water = TIP4P_2005(rc=6.0)
     masks.append(mask_water)
     calculators.append(calc_water)
     # Use subsystem calculator
