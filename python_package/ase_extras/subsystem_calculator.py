@@ -1,3 +1,4 @@
+import ase
 from ase.calculators.calculator import BaseCalculator, Calculator, all_changes
 import numpy as np
 
@@ -19,6 +20,18 @@ class SubsystemCalculator(Calculator):
 
         for mask, calc in zip(self.masks, self.calculators):
             subsystem = atoms[mask]
+            # Set RATTLE constraints on O-H bonds
+            # OHH ordering 
+            constraints = []
+            for atom in subsystem:
+                if atom.symbol=='O':
+                    if subsystem[atom.index+1].symbol=='H' and subsystem[atom.index+2].symbol=='H':
+                        constraints.append([atom.index, atom.index+1])
+                        constraints.append([atom.index, atom.index+2])
+                        constraints.append([atom.index+1, atom.index+2])
+            if len(constraints)>0:
+                rattle_constraints = ase.constraints.FixBondLengths(constraints) 
+                subsystem.set_constraint(rattle_constraints)
             calc.calculate(subsystem)
             energy += calc.results["energy"]
             forces[mask] += calc.results["forces"]
