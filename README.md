@@ -23,6 +23,12 @@ conda-lock -f environment.yml -p osx-64 -p linux-64
 ```
 Note: when installing `conda-lock` make sure to use `pipx`. 
 
+Further, you need to install a python package to get some ASE extras I wrote
+
+```bash
+pip install -e ./python_package
+```
+
 ## How to run on [Elja](https://irhpcwiki.hi.is/docs/intro/)
 
 ```bash

@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 from typing import List
-from ase_read_write_data import read_lammps_data
+from ase_extras.ase_read_write_data import read_lammps_data
 from ase.io import write
 
 import numpy as np
