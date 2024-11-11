@@ -18,6 +18,8 @@ ASE_TYPE_CATION = 11 # Na
 ASE_TYPE_ANION = 17 # Cl
 ASE_TYPE_O = 8 # O 
 ASE_TYPE_H = 1 # H 
+INTERACTION_CUTOFF = 6.0 # Should be less than or equal to half the box length 
+NUM_STEPS_MD = 200 # Number of steps for the MD per window, was 200000 in tutorial
 
 distances = np.linspace(DISTANCE_LOWEST, DISTANCE_HIGHEST, NUMBER_OF_WINDOWS)
 input_dict = {str(i): value for i, value in enumerate(distances)}
@@ -27,6 +29,7 @@ SAMPLES = list(input_dict.keys())
 rule all:
     input: 
         expand("results/window_inputs/{sample}/system.xyz", sample=SAMPLES),
+        expand("results/sampling_1/{sample}/out.traj", sample=SAMPLES)
 
 rule packmol_input:
     input:
@@ -95,3 +98,18 @@ rule lammps_data_to_xyz:
         xyz = "results/window_inputs/{sample}/system.xyz"
     shell:
         "python workflow/scripts/convert_data_to_xyz.py --data_file {input.data} --cation_type_data {params.cation_type_initial} --cation_type_ase {params.cation_type_final} --anion_type_data {params.anion_type_initial} --anion_type_ase {params.anion_type_final} --o_type_data {params.o_type_initial} --o_type_ase {params.o_type_final} --h_type_data {params.h_type_initial} --h_type_ase {params.h_type_final} --output_xyz {output.xyz}"
+
+rule umbrella_sampling_1: 
+    input:
+        xyz = rules.lammps_data_to_xyz.output.xyz
+    params:
+        cutoff = INTERACTION_CUTOFF,
+        distance = lambda wc: input_dict[wc.sample],
+        n_steps = NUM_STEPS_MD,
+        colvar = Path("results/sampling_1/{sample}/COLVAR_{sample}").resolve(), # Full path likely needed for PLUMED
+    output:
+        colvar = "results/sampling_1/{sample}/COLVAR_{sample}",
+        traj = "results/sampling_1/{sample}/out.traj",
+        metadata = "results/sampling_1/{sample}/metadata.json"
+    shell:
+        "python workflow/scripts/umbrella_sampling_1.py --in_xyz_file {input.xyz} --max_cutoff {params.cutoff} --ion_distance {params.distance} --n_steps {params.n_steps} --colvar_file {output.colvar} --traj_file {output.traj} --metadata_file {output.metadata}"
