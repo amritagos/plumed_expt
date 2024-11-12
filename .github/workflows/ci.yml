@@ -40,4 +40,4 @@ jobs:
     - name: Run the tests 
       shell:  micromamba-shell {0}
       run: |
-        pytest -v 
+        pip install ./python_package && pytest -v 
