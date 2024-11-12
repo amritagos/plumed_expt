@@ -19,5 +19,6 @@ dependencies:
   - moltemplate
   - packmol
   - lammps
+  - setuptools>=61.0
 pip: 
   - snakemake-executor-plugin-cluster-generic
