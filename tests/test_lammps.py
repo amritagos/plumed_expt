@@ -65,12 +65,16 @@ def test_lammps_lib():
     # Check atom IDs in LAMMPS?
     nlocal = atoms.calc.lmp.extract_global("nlocal")
     ids = atoms.calc.lmp.extract_atom("id")
+    x = atoms.calc.lmp.extract_atom("x")
     expected_ids = [1, 2]
 
     assert nlocal == len(atoms)
 
     for i in range(nlocal):
         assert ids[i] == expected_ids[i]
+        # Check the position
+        for k in range(3):
+            assert x[i][k] == atoms[i].position[k]
 
     # ---------
     # Check with hand-written LJ potential
