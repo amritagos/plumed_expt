@@ -30,7 +30,7 @@ jobs:
     - name: Install package into env
       shell: micromamba-shell {0}
       run: | 
-        pip install -e ./python_package
+        pip install ./python_package
 
     - name: Test that moltemplate works 
       shell:  micromamba-shell {0}
