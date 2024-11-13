@@ -56,7 +56,8 @@ tmux attach -t my_session
 ```
 
 Regarding Snakemake: always do a dry run first, and use the `config.yml` inside `elja_profile`:
-Go into the correct directory to run, for instance 1-dropH2O
+If you get errors, you might need to try things from [here](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html)
+Go into the correct directory to run, for instance
 
 ```bash
 snakemake -n --profile elja_profile/

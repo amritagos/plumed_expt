@@ -164,6 +164,7 @@ cython_debug/
 # Snakemake stuff
 */*/results/
 */*/.snakemake
+*/*/logs/
 
 # VS Code stuff 
 .vscode/
