@@ -20,8 +20,8 @@ SAMPLES = list(input_dict.keys())
 
 rule all:
     input: 
-        expand("results/window_inputs/{sample}/system.xyz", sample=SAMPLES),
-        expand("results/sampling_1/{sample}/out.traj", sample=SAMPLES)
+        expand("results/sampling_1/{sample}/out.traj", sample=SAMPLES),
+        "results/sampling_1/multi_cat.traj"
 
 rule packmol_input:
     input:
@@ -96,3 +96,11 @@ rule umbrella_sampling_1:
         metadata = "results/sampling_1/{sample}/metadata.json"
     shell:
         "python workflow/scripts/umbrella_sampling_1.py --in_xyz_file {input.xyz} --max_cutoff {params.cutoff} --ion_distance {params.distance} --n_steps {params.n_steps} --colvar_file {output.colvar} --traj_file {output.traj} --metadata_file {output.metadata}"
+
+rule concatenate_traj:
+    input: 
+        traj = expand("results/sampling_1/{sample}/out.traj", sample=SAMPLES)
+    output:
+        traj = "results/sampling_1/multi_cat.traj"
+    shell:
+        "python workflow/scripts/concat_traj.py --traj_paths {input.traj} --output_traj {output.traj}"
