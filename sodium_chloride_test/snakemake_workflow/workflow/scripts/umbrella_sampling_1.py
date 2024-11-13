@@ -8,6 +8,7 @@ from ase.io.trajectory import Trajectory
 from ase.calculators.plumed import Plumed
 from ase.md.langevin import Langevin
 from ase.data import atomic_masses
+import numpy as np
 from ase_extras.mylammps import LAMMPSlib
 
 # Inspired by tutorial PLUMED Masterclass 21.3
@@ -30,8 +31,11 @@ epsilon_o_cl = 0.061983 * units.kJ / units.mol
 epsilon_cl_cl = 0.076923 * units.kJ / units.mol
 
 # TIP4P/2005 water parameters
-sigma_o_o = 3.1589 # In Angstroms 
-epsilon_o_o = 0.1852 * units.kcal / units.mol # Originally in kcal/mol, converted to ASE units 
+sigma_o_o = 3.1589  # In Angstroms
+epsilon_o_o = (
+    0.1852 * units.kcal / units.mol
+)  # Originally in kcal/mol, converted to ASE units
+
 
 def add_bond_angle_commands(
     atoms: Atoms, amendments: list[str], bond_type: int, angle_type: int
@@ -57,6 +61,7 @@ def add_bond_angle_commands(
                 f"create_bonds single/angle {angle_type} {h1_id} {o_id} {h2_id} special no"
             )
 
+
 def main(
     in_xyz_file: Path,
     max_cutoff: float,
@@ -68,6 +73,11 @@ def main(
 ):
     # Read the entire system
     system = read(in_xyz_file)
+
+    # TODO: Change this later when minimized configurations are present
+    cell_lengths = system.cell.cellpar()[:3]
+    cell_lengths = cell_lengths + np.array([1.0, 1.0, 1.0])
+    system.set_cell(cell_lengths)
 
     tip4p_constraints = []
     for atom in system:
@@ -81,7 +91,6 @@ def main(
     # Create the LAMMPS calculator object
     # -----------------------------------------------------
     # Parameters
-    cutoff = 6.0
     o_atomic_mass = atomic_masses[8]
     h_atomic_mass = atomic_masses[1]
     na_atomic_mass = atomic_masses[11]
@@ -114,7 +123,7 @@ def main(
 
     # list of strings of LAMMPS commands. You need to supply enough to define the potential to be used e.g. [“pair_style eam/alloy”, “pair_coeff * * potentials/NiAlH_jea.eam.alloy Ni Al”]
     cmds = [
-        f"pair_style  lj/cut/tip4p/cut {atom_types['O']} {atom_types['H']} {oh_bond_type} {ohh_angle_type} {qm_distance} {cutoff}",
+        f"pair_style  lj/cut/tip4p/cut {atom_types['O']} {atom_types['H']} {oh_bond_type} {ohh_angle_type} {qm_distance} {max_cutoff}",
         "bond_style harmonic",
         "angle_style harmonic",
         f"pair_coeff {atom_types['O']} {atom_types['O']} {epsilon_o_o} {sigma_o_o}",
@@ -166,19 +175,19 @@ def main(
     )
     # -----------------------------------------------------
     timestep = 1.0 * units.fs
-    
-    # setup = [
-    #     f"UNITS LENGTH=A TIME=fs ENERGY=eV",
-    #     "d1: DISTANCE ATOMS=1,2",
-    #     f"restraint: RESTRAINT ARG=d1 AT={ion_distance} KAPPA=150.0",
-    #     f"PRINT ARG=d1,restraint.bias FILE={colvar_file} STRIDE=100",
-    # ]
 
-    # atoms.calc = Plumed(
-    #     calc=lammps_calc, input=setup, timestep=timestep, atoms=atoms, kT=temp_kT
-    # )
+    setup = [
+        f"UNITS LENGTH=A TIME=fs ENERGY=eV",
+        "d1: DISTANCE ATOMS=1,2",
+        f"restraint: RESTRAINT ARG=d1 AT={ion_distance} KAPPA=150.0",
+        f"PRINT ARG=d1,restraint.bias FILE={colvar_file} STRIDE=100",
+    ]
 
-    system.calc = lammps_calc
+    system.calc = Plumed(
+        calc=lammps_calc, input=setup, timestep=timestep, atoms=system, kT=temp_kT
+    )
+
+    # system.calc = lammps_calc
 
     dyn = Langevin(
         system,
@@ -188,9 +197,9 @@ def main(
         fixcm=False,
     )
     # dyn.run(500) # equilibration
-    # traj = Trajectory(traj_file, "w", atoms)
-    # dyn.attach(traj.write, interval=100)
-    dyn.run(1)  # 200000 in tutorial
+    traj = Trajectory(traj_file, "w", system)
+    dyn.attach(traj.write, interval=100)
+    dyn.run(n_steps)  # 200000 in tutorial
 
     # Write out metadata into a JSON file
     with open(metadata_file, "w") as f:
