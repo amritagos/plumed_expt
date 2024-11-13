@@ -73,7 +73,7 @@ def test_lammps_system():
     Test that you can constrain a rigid water molecule using the LAMMPSlib calculator and ASE
     """
     test_dir = Path(__file__).resolve().parent
-    xyz_infile = test_dir / "../resources/small_system.xyz"
+    xyz_infile = test_dir / "../resources/na_wat_system.xyz"
     system = read(xyz_infile)
 
     tip4p_constraints = []
@@ -180,8 +180,6 @@ def test_lammps_system():
     )
     energy_lmp2 = system.calc.results["energy"]
 
-    # assert np.isclose(energy_lmp2, 0.0, atol=1e-6)
-
     # Check the old bond lengths
     oh1_init, oh2_init, hh_init = get_bond_lengths(system[2:])
 
@@ -189,8 +187,8 @@ def test_lammps_system():
     n_bonds, all_bonds = system.calc.lmp.gather_bonds()
     n_angles, all_angles = system.calc.lmp.gather_angles()
 
-    assert n_angles == 1
-    assert n_bonds == 2
+    assert n_angles == 2
+    assert n_bonds == 4
 
     dyn = Langevin(
         system,
@@ -203,7 +201,7 @@ def test_lammps_system():
     dyn.run(1)
 
     # Get the final bond lengths after running the simulation
-    oh1_final, oh2_final, hh_final = get_bond_lengths(system[2:])
+    oh1_final, oh2_final, hh_final = get_bond_lengths(system[2:5])
 
     assert np.isclose(oh1_init, oh1_final, atol=1e-6)
     assert np.isclose(oh2_init, oh2_final, atol=1e-6)
