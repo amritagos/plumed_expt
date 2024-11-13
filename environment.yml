@@ -20,5 +20,6 @@ dependencies:
   - packmol
   - lammps
   - setuptools>=61.0
+  - matplotlib
 pip: 
   - snakemake-executor-plugin-cluster-generic
