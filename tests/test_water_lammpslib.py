@@ -111,7 +111,6 @@ def test_lammps_water():
         f"fix constraint all shake 1e-6 20 0 b {oh_bond_type} a {ohh_angle_type} t {atom_types['O']} {atom_types['H']}",
         f"bond_coeff {oh_bond_type} 1000000 0.9572",
         f"angle_coeff {ohh_angle_type} 1000000 104.52",
-        f"fix 2 all nvt temp {temperature} {temperature} 100 tchain 10",
     ]
 
     # Add bonds and angles
