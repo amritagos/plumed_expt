@@ -5,34 +5,43 @@ from ase import Atoms, units
 import numpy as np
 from pathlib import Path
 from ase.data import atomic_masses
+
 # from ase.calculators.lammpslib import LAMMPSlib
 from ase_extras.mylammps import LAMMPSlib
 from ase.build import molecule
 from ase.md.langevin import Langevin
 
 # TIP4P/2005 water parameters
-sigma_o_o = 3.1589 # In Angstroms 
-epsilon_o_o = 0.1852 * units.kcal / units.mol # Originally in kcal/mol, converted to ASE units 
+sigma_o_o = 3.1589  # In Angstroms
+epsilon_o_o = (
+    0.1852 * units.kcal / units.mol
+)  # Originally in kcal/mol, converted to ASE units
 
-def add_bond_angle_commands(atoms:Atoms, amendments:list[str], bond_type:int, angle_type:int):
+
+def add_bond_angle_commands(
+    atoms: Atoms, amendments: list[str], bond_type: int, angle_type: int
+):
     """Add LAMMPS commands to create bonds and angles, given an atoms object with the ordering OHH for the water molecules
 
     Args:
-        amendments (list[str]): list of strings with LAMMPS commands 
-        bond_type (int): Bond type 
-        angle_type (int): Angle type 
+        amendments (list[str]): list of strings with LAMMPS commands
+        bond_type (int): Bond type
+        angle_type (int): Angle type
     """
     for atom in atoms:
-        if atom.symbol=='O':
+        if atom.symbol == "O":
             o_id = atom.index + 1
             h1_id = o_id + 1
-            h2_id = o_id + 2 
+            h2_id = o_id + 2
             # The IDs start from 1, not 0
-            # Add bonds 
+            # Add bonds
             amendments.append(f"create_bonds single/bond {bond_type} {o_id} {h1_id}")
             amendments.append(f"create_bonds single/bond {bond_type} {o_id} {h2_id}")
-            # Add the angles 
-            amendments.append(f"create_bonds single/angle {angle_type} {o_id} {h1_id} {h2_id} special no")
+            # Add the angles
+            amendments.append(
+                f"create_bonds single/angle {angle_type} {o_id} {h1_id} {h2_id} special no"
+            )
+
 
 def get_bond_lengths(atoms):
     # just three atoms
@@ -40,6 +49,7 @@ def get_bond_lengths(atoms):
     oh2_length = atoms.get_distance(0, 2)
     hh_length = atoms.get_distance(1, 2)
     return oh1_length, oh2_length, hh_length
+
 
 def test_lammps_water():
     """
@@ -71,7 +81,7 @@ def test_lammps_water():
     temperature = temp_kT / units.kB
 
     # ---------
-    # Things for ASE - LAMMPS calculator 
+    # Things for ASE - LAMMPS calculator
     atom_types = {
         "O": 1,
         "H": 2,
@@ -93,38 +103,51 @@ def test_lammps_water():
 
     # extra list of strings of LAMMPS commands to be run post initialization. (Use: Initialization amendments) e.g.
     # [“mass 1 58.6934”]
-    amendments = [f"mass {atom_types['O']} {o_atomic_mass}", 
-                  f"mass {atom_types['H']} {h_atomic_mass}",
-                  f"set type {atom_types['O']} charge {o_charge}",
-                  f"set type {atom_types['H']} charge {h_charge}",
-                  f"fix constraint all shake 1e-6 20 0 b {oh_bond_type} a {ohh_angle_type} t {atom_types['O']} {atom_types['H']}",
-                  f"bond_coeff {oh_bond_type} 1000000 0.9572",
-                  f"angle_coeff {ohh_angle_type} 1000000 104.52",
-                  f"fix 2 all nvt temp {temperature} {temperature} 100 tchain 10"
-                  ]
+    amendments = [
+        f"mass {atom_types['O']} {o_atomic_mass}",
+        f"mass {atom_types['H']} {h_atomic_mass}",
+        f"set type {atom_types['O']} charge {o_charge}",
+        f"set type {atom_types['H']} charge {h_charge}",
+        f"fix constraint all shake 1e-6 20 0 b {oh_bond_type} a {ohh_angle_type} t {atom_types['O']} {atom_types['H']}",
+        f"bond_coeff {oh_bond_type} 1000000 0.9572",
+        f"angle_coeff {ohh_angle_type} 1000000 104.52",
+        f"fix 2 all nvt temp {temperature} {temperature} 100 tchain 10",
+    ]
 
-    # Add bonds and angles 
+    # Add bonds and angles
     bonds_angles = []
     add_bond_angle_commands(water, bonds_angles, oh_bond_type, ohh_angle_type)
 
-    # Create the LAMMPS calculator 
-    lammps_calc = LAMMPSlib(lmpcmds = cmds, atom_types= atom_types, atomic_type_masses = atomic_type_masses,lammps_header = lammps_header, amendments= amendments, n_bond_types=1, n_angle_types=1, bonds_per_atom = 2,
-        angles_per_atom=1, bond_angle_creation=bonds_angles)
+    # Create the LAMMPS calculator
+    lammps_calc = LAMMPSlib(
+        lmpcmds=cmds,
+        atom_types=atom_types,
+        atomic_type_masses=atomic_type_masses,
+        lammps_header=lammps_header,
+        amendments=amendments,
+        n_bond_types=1,
+        n_angle_types=1,
+        bonds_per_atom=2,
+        angles_per_atom=1,
+        bond_angle_creation=bonds_angles,
+    )
     # ---------
 
     timestep = 1.0 * units.fs
 
     water.calc = lammps_calc
     # energy_lmp = water.get_potential_energy()
-    water.calc.calculate(water, properties=["energy, forces"], system_changes=["positions"])
+    water.calc.calculate(
+        water, properties=["energy, forces"], system_changes=["positions"]
+    )
     energy_lmp2 = water.calc.results["energy"]
     energies = water.calc.results["energies"]
     breakpoint()
 
-    # Check the old bond lengths 
+    # Check the old bond lengths
     oh1_init, oh2_init, hh_init = get_bond_lengths(water)
 
-    # Check the number of bonds 
+    # Check the number of bonds
     n_bonds, all_bonds = water.calc.lmp.gather_bonds()
     n_angles, all_angles = water.calc.lmp.gather_angles()
 
@@ -138,7 +161,7 @@ def test_lammps_water():
         friction=1,
         fixcm=False,
     )
-    
+
     dyn.run(1)
 
     # Get the final bond lengths after running the simulation
@@ -147,7 +170,6 @@ def test_lammps_water():
     assert oh1_init == oh1_final
     assert oh2_init == oh2_final
     assert hh_init == hh_final
-    
 
 
 if __name__ == "__main__":
