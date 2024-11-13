@@ -39,7 +39,7 @@ def add_bond_angle_commands(
             amendments.append(f"create_bonds single/bond {bond_type} {o_id} {h2_id}")
             # Add the angles
             amendments.append(
-                f"create_bonds single/angle {angle_type} {o_id} {h1_id} {h2_id} special no"
+                f"create_bonds single/angle {angle_type} {h1_id} {o_id} {h2_id} special no"
             )
 
 
@@ -59,14 +59,14 @@ def test_lammps_water():
     xyz_infile = test_dir / "../resources/single_water.xyz"
     water = read(xyz_infile)
 
-    # tip4p_constraints = []
-    # for atom in water:
-    #     if atom.symbol == "O":
-    #         tip4p_constraints.append([atom.index, atom.index + 1])
-    #         tip4p_constraints.append([atom.index, atom.index + 2])
-    #         tip4p_constraints.append([atom.index + 1, atom.index + 2])
-    # rattle_constraints = ase.constraints.FixBondLengths(tip4p_constraints)
-    # water.set_constraint(rattle_constraints)
+    tip4p_constraints = []
+    for atom in water:
+        if atom.symbol == "O":
+            tip4p_constraints.append([atom.index, atom.index + 1])
+            tip4p_constraints.append([atom.index, atom.index + 2])
+            tip4p_constraints.append([atom.index + 1, atom.index + 2])
+    rattle_constraints = ase.constraints.FixBondLengths(tip4p_constraints)
+    water.set_constraint(rattle_constraints)
 
     # Parameters
     cutoff = 6.0
@@ -141,8 +141,8 @@ def test_lammps_water():
         water, properties=["energy, forces"], system_changes=["positions"]
     )
     energy_lmp2 = water.calc.results["energy"]
-    energies = water.calc.results["energies"]
-    breakpoint()
+
+    assert np.isclose(energy_lmp2, 0.0, atol=1e-6)
 
     # Check the old bond lengths
     oh1_init, oh2_init, hh_init = get_bond_lengths(water)
@@ -167,9 +167,9 @@ def test_lammps_water():
     # Get the final bond lengths after running the simulation
     oh1_final, oh2_final, hh_final = get_bond_lengths(water)
 
-    assert oh1_init == oh1_final
-    assert oh2_init == oh2_final
-    assert hh_init == hh_final
+    assert np.isclose(oh1_init, oh1_final, atol=1e-6)
+    assert np.isclose(oh2_init, oh2_final, atol=1e-6)
+    assert np.isclose(hh_init, hh_final, atol=1e-6)
 
 
 if __name__ == "__main__":
