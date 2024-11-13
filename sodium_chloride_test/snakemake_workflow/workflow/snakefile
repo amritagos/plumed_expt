@@ -21,7 +21,8 @@ SAMPLES = list(input_dict.keys())
 rule all:
     input: 
         expand("results/sampling_1/{sample}/out.traj", sample=SAMPLES),
-        "results/sampling_1/multi_cat.traj"
+        "results/sampling_1/multi_cat.traj",
+        expand("results/sampling_2/{sample}/COLVAR_{sample}", sample=SAMPLES)
 
 rule packmol_input:
     input:
@@ -89,7 +90,6 @@ rule umbrella_sampling_1:
         cutoff = INTERACTION_CUTOFF,
         distance = lambda wc: input_dict[wc.sample],
         n_steps = NUM_STEPS_MD,
-        colvar = Path("results/sampling_1/{sample}/COLVAR_{sample}").resolve(), # Full path likely needed for PLUMED
     output:
         colvar = "results/sampling_1/{sample}/COLVAR_{sample}",
         traj = "results/sampling_1/{sample}/out.traj",
@@ -104,3 +104,15 @@ rule concatenate_traj:
         traj = "results/sampling_1/multi_cat.traj"
     shell:
         "python workflow/scripts/concat_traj.py --traj_paths {input.traj} --output_traj {output.traj}"
+
+rule analyze_biased:
+    input: 
+        traj = rules.concatenate_traj.output.traj
+    params:
+        cutoff = INTERACTION_CUTOFF,
+        distance = lambda wc: input_dict[wc.sample],
+    output:
+        colvar = "results/sampling_2/{sample}/COLVAR_{sample}",
+        metadata = "results/sampling_2/{sample}/metadata.json"
+    shell:
+        "python workflow/scripts/process_biased_traj_2.py --in_traj {input.traj} --max_cutoff {params.cutoff} --ion_distance {params.distance} --colvar_file {output.colvar} --metadata_file {output.metadata}"
