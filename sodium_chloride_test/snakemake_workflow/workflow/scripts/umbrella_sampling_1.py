@@ -76,7 +76,7 @@ def main(
 
     # TODO: Change this later when minimized configurations are present
     cell_lengths = system.cell.cellpar()[:3]
-    cell_lengths = cell_lengths + np.array([1.0, 1.0, 1.0])
+    cell_lengths = cell_lengths + np.array([2.0, 2.0, 2.0])
     system.set_cell(cell_lengths)
 
     tip4p_constraints = []
