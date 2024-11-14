@@ -114,8 +114,7 @@ def main(
     # Write the PLUMED input file as well
     with open(out_plumed, "w") as f:
         print(
-            f"""# vim:ft=plumed
-UNITS LENGTH=A TIME=fs ENERGY=eV
+            f"""UNITS LENGTH=A TIME=fs ENERGY=eV
 d1: READ FILE={out_colvar} VALUES=d1 IGNORE_TIME
 lw: READ FILE={out_colvar} VALUES=logweights IGNORE_TIME
 
