@@ -147,4 +147,4 @@ rule wham_plumed:
         fes = rules.wham_prepare.params.fes,
         fes_log = rules.wham_prepare.params.fes_log,
     shell:
-        "plumed driver --noatoms --plumed {input.plumed} --kt {params.kbT}"
+        "plumed driver --noatoms --plumed {input.plumed}"
