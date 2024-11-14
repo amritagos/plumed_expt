@@ -108,7 +108,7 @@ def main(
     w = wham(bias=bias, T=kbT)
     # Produce file for PLUMED
     colvar = data[0]
-    colvar["logweights"] = w["logW"]
+    colvar["logweights"] = w["logW"]  # didn't use this
     plumed.write_pandas(colvar, str(out_colvar))
 
     # Write the PLUMED input file as well
@@ -116,7 +116,9 @@ def main(
         print(
             f"""UNITS LENGTH=A TIME=fs ENERGY=eV
 d1: READ FILE={out_colvar} VALUES=d1 IGNORE_TIME
-lw: READ FILE={out_colvar} VALUES=logweights IGNORE_TIME
+bb: READ FILE={out_colvar} VALUES=restraint.bias 
+lw: READ FILE={out_colvar} VALUES=logweights 
+bias: REWEIGHT_BIAS ARG=bb.bias TEMP=300
 
 # use the command below to compute the histogram of phi
 # we use a smooth kernel to produce a nicer graph here
