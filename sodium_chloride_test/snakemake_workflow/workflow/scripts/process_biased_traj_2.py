@@ -179,7 +179,8 @@ def main(
         f"UNITS LENGTH=A TIME=fs ENERGY=eV",
         "d1: DISTANCE ATOMS=1,2",
         f"restraint: RESTRAINT ARG=d1 AT={ion_distance} KAPPA=150.0",
-        f"PRINT ARG=d1,restraint.bias FILE={colvar_file} STRIDE=100",
+        f"PRINT ARG=d1,restraint.bias FILE={colvar_file} STRIDE=1",
+        "FLUSH STRIDE=1",
     ]
 
     calc_plumed = Plumed(
