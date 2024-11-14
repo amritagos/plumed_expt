@@ -121,12 +121,12 @@ lw: READ FILE={out_colvar} VALUES=logweights IGNORE_TIME
 # use the command below to compute the histogram of phi
 # we use a smooth kernel to produce a nicer graph here
 hhd1: HISTOGRAM ARG=d1 GRID_MIN={grid_min} GRID_MAX={grid_max} GRID_BIN={grid_bin} BANDWIDTH=0.05
-ffd1: CONVERT_TO_FES GRID=hhphi # TEMP not set here 
+ffd1: CONVERT_TO_FES GRID=hhd1 # TEMP not set here 
 DUMPGRID GRID=ffd1 FILE={fes_filename}
 
 # we use a smooth kernel to produce a nicer graph here
 hhd1r: HISTOGRAM ARG=d1 GRID_MIN={grid_min} GRID_MAX={grid_max} GRID_BIN={grid_bin} BANDWIDTH=0.05 LOGWEIGHTS=lw
-ffd1r: CONVERT_TO_FES GRID=hhphir # TEMP not set here 
+ffd1r: CONVERT_TO_FES GRID=hhd1r # TEMP not set here 
 DUMPGRID GRID=ffd1r FILE={fes_log_filename}
 
 """,
