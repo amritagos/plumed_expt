@@ -84,6 +84,7 @@ def wham(
 def main(
     colvar_in_files: list[Path],
     kbT: float,
+    temperature: float,
     grid_min: float,
     grid_max: float,
     grid_bin: int,
@@ -108,7 +109,7 @@ def main(
     w = wham(bias=bias, T=kbT)
     # Produce file for PLUMED
     colvar = data[0]
-    colvar["logweights"] = w["logW"]  
+    colvar["logweights"] = w["logW"]
     plumed.write_pandas(colvar, str(out_colvar))
 
     # Write the PLUMED input file as well
@@ -122,12 +123,12 @@ lw: READ FILE={out_colvar} VALUES=logweights
 # use the command below to compute the histogram of phi
 # we use a smooth kernel to produce a nicer graph here
 hhd1: HISTOGRAM ARG=d1 GRID_MIN={grid_min} GRID_MAX={grid_max} GRID_BIN={grid_bin} BANDWIDTH=0.05
-ffd1: CONVERT_TO_FES GRID=hhd1 TEMP=300
+ffd1: CONVERT_TO_FES GRID=hhd1 TEMP={temperature}
 DUMPGRID GRID=ffd1 FILE={fes_filename}
 
 # we use a smooth kernel to produce a nicer graph here
 hhd1r: HISTOGRAM ARG=d1 GRID_MIN={grid_min} GRID_MAX={grid_max} GRID_BIN={grid_bin} BANDWIDTH=0.05 LOGWEIGHTS=lw
-ffd1r: CONVERT_TO_FES GRID=hhd1r TEMP=300 
+ffd1r: CONVERT_TO_FES GRID=hhd1r TEMP={temperature} 
 DUMPGRID GRID=ffd1r FILE={fes_log_filename}
 
 """,
@@ -142,6 +143,8 @@ if __name__ == "__main__":
     parser.add_argument("--colvar_in_files", type=Path, nargs="+")
 
     parser.add_argument("--kbT", type=float, help="Boltzmann constant * temperature")
+
+    parser.add_argument("--T", type=float, help="Temperature in Kelvin")
 
     parser.add_argument(
         "--grid_min", type=float, help="Lower bounds for the grid in PLUMED"
@@ -164,6 +167,7 @@ if __name__ == "__main__":
     main(
         args.colvar_in_files,
         args.kbT,
+        args.T,
         args.grid_min,
         args.grid_max,
         args.grid_bin,

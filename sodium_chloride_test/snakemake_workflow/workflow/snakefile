@@ -13,6 +13,7 @@ NUM_ANIONS = 1
 INTERACTION_CUTOFF = 6.0 # Should be less than or equal to half the box length 
 NUM_STEPS_MD = 1000 # Number of steps for the MD per window, was 200000 in tutorial
 BOLTZMANNCONSTANT_TEMP = 8.617333262e-5*300 # should be in eV, kB*T
+TEMPERATURE = 300.0 # Temperature in Kelvin
 NUM_BINS = 200 # for histogramming in PLUMED, 200 in manual 
 
 distances = np.linspace(DISTANCE_LOWEST, DISTANCE_HIGHEST, NUMBER_OF_WINDOWS)
@@ -126,6 +127,7 @@ rule wham_prepare:
         colvar = expand("results/sampling_2/{sample}/COLVAR_{sample}", sample=SAMPLES)
     params:
         kbT = BOLTZMANNCONSTANT_TEMP,
+        T = TEMPERATURE,
         grid_min = DISTANCE_LOWEST,
         grid_max = DISTANCE_HIGHEST,
         grid_bin = NUM_BINS,
@@ -135,14 +137,12 @@ rule wham_prepare:
         colvar = "results/wham_3/bias_multi.dat",
         plumed = "results/wham_3/plumed_multi.dat",
     shell:
-        "python workflow/scripts/wham_prep.py --colvar_in_files {input.colvar} --kbT {params.kbT} --grid_min {params.grid_min} --grid_max {params.grid_max} --grid_bin {params.grid_bin} --out_colvar {output.colvar} --fes_filename {params.fes} --fes_log_filename {params.fes_log} --out_plumed {output.plumed}"
+        "python workflow/scripts/wham_prep.py --colvar_in_files {input.colvar} --kbT {params.kbT} --T {params.T} --grid_min {params.grid_min} --grid_max {params.grid_max} --grid_bin {params.grid_bin} --out_colvar {output.colvar} --fes_filename {params.fes} --fes_log_filename {params.fes_log} --out_plumed {output.plumed}"
 
 rule wham_plumed:
     input: 
         colvar = rules.wham_prepare.output.colvar,
         plumed = rules.wham_prepare.output.plumed,
-    params:
-        kbT = BOLTZMANNCONSTANT_TEMP,
     output:
         fes = rules.wham_prepare.params.fes,
         fes_log = rules.wham_prepare.params.fes_log,
